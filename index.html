@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+  
+<html lang="en">
+<head>
+     <meta charset="UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />  <!-- ??-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <!-- ??-->
+      
+      <title>Smart Parking</title>
+      
+      <link rel="preconnect" href="https://fonts.gstatic.com" />
+      <link rel="icon" href="./img/parking-svgrepo-com.svg" />
+      <!-- icon quạt, đèn, nhiệt độ, độ ẩm-->
+      <link
+         rel="stylesheet"
+         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+         integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+         crossorigin="anonymous"
+      />
+      <!-- in đậm 2 chữ 37 và 80g/m3-->
+      <link
+         href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400&display=swap"
+         rel="stylesheet"
+      />
+      <!--link vs các file CSS, trong trường hợp các file này không được bỏ chung vào 1 file html như thế này thì mới cần-->
+      <link rel="stylesheet" href="./style/base.css" /> 
+      <link rel="stylesheet" href="./style/main.css" />
+      <link rel="stylesheet" href="./style/responsive.css" />
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
+      <script src="./script.js" defer></script>
+   </head>
+  
+
+   <body>
+      <div class="header">SMART PARKING</div> <!-- thẻ div như 1 thùng chứa kiểu như thay vì thay đổi thuộc tính cho cho dòng tiêu đề, thì mình thay đổi ở thẻ div thì tất cả dữ liệu chứa trong thẻ div sẽ thay đổi theo-->      
+
+      <div class="body"> <!-- thùng div sử dụng những thuộc tính đã được định nghĩa ở class có tên là body-->
+         <div class="row park"> <!-- bổ sung thuộc tính là row park ??????????-->
+           <!--span cũng tương tự nhưng mà nhỏ hơn div, span là 1 phần tử nội tuyến -->
+            <span id = "slot1" class="park__slot park__slot--1">SLOT 1</span> <!-- có áp dụng 2 class có tên là "park__slot "còn " park__slot--1"???? -->
+            <span id = "slot2" class="park__slot park__slot--2">SLOT 2</span>
+            <span id = "slot3" class="park__slot park__slot--3">SLOT 3</span>
+         </div>
+
+         <div class="row control"> <!-- row control ???-->
+            <div class="control__device col-lg-7 col-md-12">
+              <!-- button QUẠT -->
+               <div class="control__device-item">
+                  <i class="fas fa-fan control__device-icon"></i> <!--icon quạt (tại sao là thẻ i)--????????????????-->
+                  <p class="control__device-name">FAN</p>
+                  <button id= "colorQuat" class="control__device-btn control__device-btn--fan on-off-btn" onclick="DK_QUAT()">ON/OFF FAN </button> <!-- btn on-off-btn btn-fan ??>--> <!-- dòng btn on-off-btn btn-fan ảnh hưởng kích thước của button-->
+                  <span id="trangthaiquat">OFF</span>
+                 
+               </div>
+             <!-- button ĐÈN -->
+               <div class="control__device-item">
+                  <i class="fas fa-lightbulb control__device-icon"></i>
+                  <p class="control__device-name">LIGHT</p>
+                  <button id = "colorDen" class="control__device-btn control__device-btn--light on-off-btn" onclick = "DK_DEN()">ON/OFF LIGHT</button>
+                     <span id="trangthaiden">OFF</span>
+                 
+               </div>
+
+
+             <!-- button Hẹn Giờ Đèn -->
+               <div class="control__device-item">
+                  <i class="fas fa-lightbulb control__device-icon"></i>
+                  <p class="control__device-name">ON/OFF TIMER</p>
+                  <button id= "colorHG" class="control__device-btn  on-off-btn" onclick = "BUTTON_HENGIO ()">ON/OFF TIMER</button>
+               </div>
+
+
+             <!-- HẸN GIỜ QUẠT --> 
+             <div class="control__device-item block-sm-device">
+                  <label class="control__device-name" for="fan-time">Timer Fan:</label>
+                  <div class="control__device-time-input">
+                     <input
+                        class="time-out time-out__fan--start"
+                        type="time"
+                        name="fan-time"
+                     />
+                     <span>-</span>
+                     <input
+                        class="time-out time-out__fan--end"
+                        type="time"
+                        name="fan-time"
+                     />
+                  </div>
+                  <button class="control__device-btn set-time-btn set-time-btn--fan"  onclick="SEND_FanHour()">Timer Fan</button>
+               </div>
+               <!-- HẸN GIỜ ĐÈN -->
+               <div class="control__device-item block-sm-device">
+                  <label class="control__device-name" for="light-time" >Timer Light:</label>
+                  <div class="control__device-time-input">
+                     <input
+                        class="time-out time-out__light--start"
+                        type="time"
+                        name="light-time"
+                     />
+                     <span>-</span>
+                     <input
+                        class="time-out time-out__light--end"
+                        type="time"
+                        name="light-time"
+                     />
+                  </div>
+
+                  <button class="control__device-btn set-time-btn set-time-btn--light" onclick="SEND_LightHour()">Timer Light</button>
+               </div>              
+
+            </div>
+            <!-- DIV này thể hiện giá trị-->
+            <div class="control__device col-lg-5 col-md-12">
+               <!-- Nhiệt độ -->
+               <div class="control__device-item">
+                  <i class="fas fa-thermometer-three-quarters control__device-icon"></i>
+                  <p class="control__device-name">TEMPERATURE:</p>
+                  <span class="control__status control__status--temperature">37 °C</span>
+               </div>
+               <!-- Độ ẩm -->
+               <div class="control__device-item">
+                  <i class="fas fa-tint control__device-icon"></i>
+                  <p class="control__device-name">HUMIDITY:</p>
+                  <span class="control__status control__status--humidity">80 g/m3</span>
+               </div>
+               <!-- Tình trạng -->
+               <div class="control__device-item">
+                  <p class="control__device-name">STATUS:</p>
+                  <span id = "available" class="status avai">AVAILABLE</span>
+                  <span></span>
+                  <span id = "full" class="status full">FULL SLOT</span>
+               </div>
+            </div>
+
+         </div>
+
+      </div>
+
+      <style>
+         * {
+   padding: 0;
+   margin: 0;
+   box-sizing: border-box;
+}
+
+html {
+   position: relative;
+   font-family: 'Roboto', sans-serif;
+   font-size: 62.5%;
+}
+
+.row {
+   display: flex;
+   flex-wrap: wrap;
+   width: 1200px;
+   max-width: 100%;
+   margin: 0 auto;
+}
+
+.col-lg-8 {
+   width: 66.6666%;
+}
+
+.col-lg-7 {
+   width: 58.3333%;
+}
+
+.col-lg-5 {
+   width: 41.6667%;
+}
+.col-lg-4 {
+   width: 33.3334%;
+}
+
+.green {
+   background-color: #8aec8a;
+   border-radius: 3px;
+}
+
+.gold {
+   background-color: #FFD700;
+   border-radius: 3px;
+}
+
+.violet {
+   background-color: #8A2BE2;
+   border-radius: 3px;
+}
+
+
+.header {
+   font-size: 2.4rem;
+   font-weight: 500;
+   text-align: center;
+   height: 46px;
+   background-color: #ff8066;
+   line-height: 46px;
+   color: #fff;
+   width: 100%;
+}
+
+.park {
+   justify-content: space-around;
+   width: 100%;
+}
+.status {
+   margin-top: 12px;
+   font-size: 2rem;
+   border-radius: 3px;
+   border: 1px solid;
+   padding: 12px;   
+}
+
+.status__color--full{
+   margin-top: 12px;
+   font-size: 2rem;
+   border-radius: 3px;
+   border: 1px solid;
+   padding: 12px;
+   background-color: #DF013A;
+}
+
+.status__color--available{
+   margin-top: 12px;
+   font-size: 2rem;
+   border-radius: 3px;
+   border: 1px solid;
+   padding: 12px;
+   background-color: #00FFFF;
+}
+
+.park__slot {
+   margin-top: 12px;
+   font-size: 2rem;
+   border-radius: 3px;
+   border: 1px solid;
+   padding: 12px;
+   
+}
+.park__slot--color {
+   margin-top: 12px;
+   font-size: 2rem;
+   border-radius: 3px;
+   border: 1px solid;
+   padding: 12px;
+   background-color: #076bef;
+}
+.control__device-item {
+   display: flex;
+   align-items: center;
+   flex-wrap: nowrap;
+   margin-top: 16px;
+   margin-left: 24px;
+}
+
+.control__device-name {
+   font-size: 1.8rem;
+   min-width: 50px;
+}
+
+.control__device-icon {
+   font-size: 1.3rem;
+   margin-right: 6px;
+   opacity: 0.8;
+   min-width: 22px;
+   text-align: center;
+}
+.control__device-btn {
+   margin: 0 0 0 10px;
+   padding: 4px;
+   cursor: pointer;
+   min-width: 90px;
+}
+
+.control__device-btn:focus,
+.control__device-btn:active {
+   border-radius: 3px;
+}
+
+.control__device-item label {
+   width: 112px;
+}
+
+.control__device-item span {
+   margin: 0 8px;
+   font-size: 1.8rem;
+}
+
+.time-out {
+   min-width: 94px;
+}
+
+.control__status {
+   font-weight: 500;
+}
+@media (max-width: 782px) {
+   .col-md-12 {
+      width: 100% !important;
+   }
+}
+
+@media (max-width: 479px) {
+   .block-sm-device {
+      display: block;
+   }
+
+   .control__device-time-input {
+      margin: 12px 0;
+      width: 60%;
+   }
+
+   .time-out {
+      width: calc(50% - 13px);
+      /* width: 50%; */
+   }
+   .set-time-btn {
+      margin: 0;
+      width: 60%;
+   }
+}
+
+@media (max-width: 381px) {
+   .time-out {
+      width: 100%;
+   }
+}         
+      </style>
+   </body>
+
+   <script>
+//<--!'use strict'; -->
+
+// const btnElements = document.querySelectorAll('.on-off-btn');
+// console.log(btnElements);
+// btnElements.forEach(function (element) {
+//    element.addEventListener('click', function () { 
+//       if (this.classList.contains ('control__device-btn--fan'))
+//       {
+//         DK_QUAT();        
+//       }
+//        if (this.classList.contains ('control__device-btn--light'))
+//       {
+//         DK_DEN();
+//       }    
+
+//       this.classList.toggle('green');
+      
+//    });
+// });
+
+//Document.querySelector(‘.control__stt—temperature’).innerHTML = biến nhiệt độ đọc từ vi điều 
+var checkjson = false;
+
+var hostname = "mqtt.ngoinhaiot.com";
+var port = 2222;
+var clientId = "Web";
+clientId += new Date().getUTCMilliseconds();
+
+var user_mqtt = "phamtam215";
+var pass_mqtt = "phamtam215";
+
+var topicpub = "phamtam215/quat";
+
+var topicsub = "phamtam215/maylanh"; // topic nhận dữ liệu của ESP
+
+mqttClient = new Paho.MQTT.Client(hostname, port, clientId);
+mqttClient.onMessageArrived = MessageArrived;
+mqttClient.onConnectionLost = ConnectionLost;
+Connect();
+
+function Connect(){
+  mqttClient.connect({
+  useSSL: false,
+  userName: user_mqtt,
+  password: pass_mqtt,
+  onSuccess: Connected,
+  onFailure: ConnectionFailed,
+  keepAliveInterval: 10,
+  });
+}
+function Connected() {
+  console.log("Connected to broker");
+  mqttClient.subscribe(topicsub);
+}
+
+
+function ConnectionFailed(res) {
+  console.log("Connect failed:" + res.errorMessage);
+}
+
+
+function ConnectionLost(res) {
+  if (res.errorCode !== 0) {
+    console.log("Connection lost:" + res.errorMessage);
+    Connect();
+  }
+}
+
+function IsJsonString(str)
+      {
+        try
+        {
+          JSON.parse(str);
+        } 
+        catch (e)
+        {
+          checkjson = false;
+          return false;
+        }
+        checkjson = true;
+        return true;
+      }
+
+
+function DK_DEN()
+{
+  
+  console.log("Button đèn được click!!!");
+  
+  var trangthai = document.getElementById("trangthaiden").innerHTML
+  
+  console.log("trangthaiden: " + trangthai);
+  
+  if(trangthai == "OFF")
+  {
+  // gửi dữ liệu ON
+  // dữ liệu
+  var colorQuat = document.getElementById("colorDen");        
+  colorQuat.classList.add ("gold") ; 
+  var DataSend = "{\"TB1\":\"1\"}";
+  
+  mqttClient.send(topicpub, DataSend);
+
+  
+    
+  }
+  else if(trangthai == "ON")
+  {
+  // gửi dữ liệu OFF
+  var colorQuat = document.getElementById("colorDen");        
+  colorQuat.classList.remove ("gold") ; 
+  var DataSend = "{\"TB1\":\"0\"}";
+  mqttClient.send(topicpub, DataSend);
+  }
+  
+}
+
+function DK_QUAT()
+{
+  console.log("Button quạt được click!!!");
+  
+  var trangthai = document.getElementById("trangthaiquat").innerHTML
+  
+  console.log("trangthaiquat: " + trangthai);
+  
+  if(trangthai == "OFF")
+  {
+  // gửi dữ liệu ON
+  // dữ liệu
+  //document.querySelector (control__device-btn--fan);
+  var colorQuat = document.getElementById("colorQuat");        
+  colorQuat.classList.add ("green") ; 
+  var DataSend = "{\"TB2\":\"1\"}";
+  
+  mqttClient.send(topicpub, DataSend);
+  
+    
+  }
+  else if(trangthai == "ON")
+  {
+  // gửi dữ liệu OFF
+  var colorQuat = document.getElementById("colorQuat");        
+  colorQuat.classList.remove ("green") ; 
+  var DataSend = "{\"TB2\":\"0\"}";
+  mqttClient.send(topicpub, DataSend);
+  }
+  
+}
+
+function BUTTON_HENGIO ()
+{
+  var hengio = "1"; 
+  console.log ("Button hen gio da duoc click");
+  var colorQuat = document.getElementById("colorHG");        
+  colorQuat.classList.toggle ("violet") ; 
+  //gửi dữ liệu
+  var DataSend = "{\"HG\":\"" + String(hengio) + "\"}"
+  mqttClient.send(topicpub, DataSend);
+
+  /////?>>CHƯA GỬI DỮ LIỆU
+  
+}
+
+
+function SEND_FanHour()
+{
+  var FanStart = document.querySelector (".time-out__fan--start").value ;
+  console.log ("FanStart");
+  console.log (FanStart);
+  console.log("Button hẹn giờ quạt onclick!!!");  
+
+  var DataSendStart = "{\"FHB\":\"" + String(FanStart) + "\"}"
+  mqttClient.send(topicpub, DataSendStart);
+  
+
+  var FanEnd = document.querySelector (".time-out__fan--end").value ;
+  console.log ("FanEnd");
+  console.log (FanEnd);
+  console.log("Button hẹn giờ quạt onclick!!!");  
+
+  var DataSendEnd = "{\"FHA\":\"" + String(FanEnd) + "\"}"
+  mqttClient.send(topicpub, DataSendEnd);
+}
+
+function SEND_LightHour()
+{
+  var LightStart = document.querySelector (".time-out__light--start").value ;
+  console.log ("LightStart");
+  console.log (LightStart);
+  console.log("Button hẹn giờ đèn onclick!!!");    
+  var DataSendStart = "{\"LHB\":\"" + String(LightStart) + "\"}"
+  mqttClient.send(topicpub, DataSendStart);
+    
+
+  var LightEnd = document.querySelector (".time-out__light--end").value ;
+  console.log ("LightEnd");
+  console.log (LightEnd);
+  console.log("Button hẹn giờ đèn onclick!!!");  
+  var DataSendEnd = "{\"LHA\":\"" + String(LightEnd) + "\"}"
+  mqttClient.send(topicpub, DataSendEnd);
+ 
+}
+
+
+
+
+function MessageArrived(message) 
+{
+  console.log("Data nhận được từ ESP:" + message.payloadString);  
+  
+  IsJsonString(message.payloadString);
+  
+  if(checkjson)
+  {
+     console.log("JSON OK!!!");
+     var  DataVDK = message.payloadString;
+  
+  var DataJson = JSON.parse(DataVDK); 
+      
+      if(DataJson.ND != null)
+      {
+        document.querySelector(".control__status--temperature").innerHTML = `${DataJson.ND} °C`;
+      }
+      
+      if(DataJson.DA != null)
+      {
+        document.querySelector(".control__status--humidity").innerHTML = `${DataJson.DA} g/m3`;
+      }
+      
+       if(DataJson.IR1 != null)
+      {
+          if (DataJson.IR1 == "0") 
+          {
+             var element1 = document.getElementById("slot1");        
+             element1.classList.add ("park__slot--color") ; 
+          } 
+          if (DataJson.IR1 == "1") 
+          {
+             var element1 = document.getElementById("slot1");
+             element1.classList.remove ("park__slot--color");        
+           }     
+       }
+
+
+      if(DataJson.IR2 != null)
+      {
+          if (DataJson.IR2 == "0") 
+          {
+             var element2 = document.getElementById("slot2");        
+             element2.classList.add ("park__slot--color") ; 
+          } 
+          if (DataJson.IR2 == "1") 
+          {
+             var element2 = document.getElementById("slot2");
+             element2.classList.remove ("park__slot--color");        
+           }     
+       }
+      
+
+      if(DataJson.IR3 != null)
+      {
+          if (DataJson.IR3 == "0") 
+          {
+             var element3 = document.getElementById("slot3");        
+             element3.classList.add ("park__slot--color") ; 
+          } 
+          if (DataJson.IR3 == "1") 
+          {
+             var element3 = document.getElementById("slot3");
+             element3.classList.remove ("park__slot--color");        
+           }     
+       }
+      if ((DataJson.IR1 != null) && (DataJson.IR2 != null) ) 
+      {
+         if (DataJson.IR3 != null)
+         {
+         var el_full = document.getElementById("full");
+         var el_avai = document.getElementById("available");
+
+         if ((DataJson.IR1 == "0") && (DataJson.IR2 == "0") )
+         {
+          if (DataJson.IR3 == "0")
+          {
+          el_full.classList.add ("status__color--full");
+          el_avai.classList.remove ("status__color--available");   
+          }
+
+         } else
+           {
+            el_avai.classList.add ("status__color--available");   
+            el_full.classList.remove ("status__color--full");
+
+           }
+         }
+      }
+
+      // cập nhật lại giá trị của TB1 và TB2 để hàm DK_DEN tham chiếu vào trạng thái để đưa ra JSON điều khiển 0 hoặc 1
+      if(DataJson.TB1 != null)
+      {
+        //document.getElementById("cai3").innerHTML = DataJson.C3;
+        
+        if(DataJson.TB1 == 0)
+        {
+          document.getElementById("trangthaiden").innerHTML = `OFF`;
+        
+        }
+        else if(DataJson.TB1 == 1)
+        {
+          document.getElementById("trangthaiden").innerHTML = `ON`;
+          
+        }
+        
+      }      
+      
+      if(DataJson.TB2 != null)
+      {
+        //document.getElementById("cai3").innerHTML = DataJson.C3;
+        
+        if(DataJson.TB2 == 0)
+        {
+          document.getElementById("trangthaiquat").innerHTML = `OFF`;
+        }
+        else if(DataJson.TB2 == 1)
+        {
+          document.getElementById("trangthaiquat").innerHTML = `ON`;
+        }        
+      }      
+     
+  }
+  else 
+  {
+    console.log("JSON Error!!!");
+  }
+  
+
+}
+
+</script>
+</html>
+
+
+
+
