@@ -352,7 +352,7 @@ html {
 var checkjson = false;
 
 var hostname = "mqtt.ngoinhaiot.com";
-var port = 3333;
+var port = 2222;
 var clientId = "Web";
 clientId += new Date().getUTCMilliseconds();
 
@@ -370,7 +370,7 @@ Connect();
 
 function Connect(){
   mqttClient.connect({
-  useSSL: true,
+  useSSL: false,
   userName: user_mqtt,
   password: pass_mqtt,
   onSuccess: Connected,
