@@ -370,7 +370,7 @@ Connect();
 
 function Connect(){
   mqttClient.connect({
-  useSSL: false,
+  useSSL: true,
   userName: user_mqtt,
   password: pass_mqtt,
   onSuccess: Connected,
